@@ -280,6 +280,31 @@ function Gpio() {
     };
 
     /**
+     * Teardown a previously setup channel
+     *
+     * @param {number}   channel   Reference to the pin in the current mode's schema
+     * @param {function} onTeardown   Optional callback
+     */
+    this.teardown = function(channel, onTeardown /*err*/) {
+        onTeardown = onTeardown || function() {};
+
+        var pin = getPinForCurrentMode(channel);
+
+        if (!exportedInputPins[pin] && !exportedOutputPins[pin]) {
+            return onTeardown(new Error('Pin has not been exported'));
+        }
+
+        if (exportedInputPins[pin]) {
+            delete exportedInputPins[pin];
+        } else {
+            delete exportedOutputPins[pin];
+        }
+
+        removeListener(pin, pollers);
+        return unexportPin(pin, onTeardown);
+    };
+
+    /**
      * Unexport any pins setup by this module
      *
      * @param {function} cb Optional callback
